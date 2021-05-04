@@ -35,4 +35,4 @@ module.exports.hash = ({text, salt}) => {
   sha512.update(salt + text)
   return sha512.digest('hex')
 }
-module.exports.get_fulldomain = (request) => `${request.protocol}://${request.get('host')}`
+module.exports.get_fulldomain = (request) => `${request.protocol}://${request.get('origin')}`
