@@ -1,0 +1,16 @@
+Title: moauth flow /signin
+Browser->AuthServer: access /signin page
+Note over AuthServer: get the requested page\nwhen access_token and user_id\nare saved in the session
+AuthServer-->>Browser: (get the requested page) 
+Note over AuthServer: save requested uri\nto session
+Note over AuthServer: validate self(app_id & app_secret)
+Note over AuthServer: issue app_token
+AuthServer-->>Browser: [REDIRECT:{AUTH_URI}/signin?app_token=***]
+Note over Browser: enter user_id & password
+Browser->AuthServer: [POST:{AUTH_URI}/api/get_access_token] app_token, user_id, password
+Note over AuthServer: validate app_token, user_id, password
+Note over AuthServer: issue access_token
+Note over AuthServer: save user_id and access_token\nto session
+Note over AuthServer: restore requested uri\nfrom session
+AuthServer->Browser: [REDIRECT] get the requested page
+
