@@ -5,7 +5,7 @@ simple oauth communication helper
 - mongodb: oauth server need mongodb.
 
 ## install
-`npm install git+https://maruyu998/moauth.git`
+`npm install git+https://github.com/maruyu998/MOauth.git`
 
 ## sequence diagram
 Flow in client application auth
