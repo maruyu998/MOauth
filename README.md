@@ -21,7 +21,7 @@ const express = require('express')
 const session = require('express-session')
 const config = require('config')
 
-const moauth = new (require('MOauth').client)({
+const moauth = new (require('moauth').client)({
   app_token_issue_server_uri: `${config.authserver}/api/get_app_token`,
   user_signin_server_uri: `${config.authserver}/signin`,
   access_token_validate_server_uri: `${config.authserver}/api/validate_access_token`,
@@ -36,7 +36,7 @@ app.use(express.urlencoded({ extended: false }))
 app.use(session({
   secret:config.SESSION_SECRET,
   rolling : true,
-  name: config.appid,
+  name: config.app_id,
   cookie: { 
     secure:false, 
     httpOnly:false, 
@@ -81,7 +81,7 @@ const { MongoClient } = require('mongodb')
     ).connect()
     .then(async mongoClient => mongoClient.db(config.mongo_dbname).collection('all'))
 
-  const moauth = new (require('MOauth').server)({
+  const moauth = new (require('moauth').server)({
     mongo_collection,
     hash_salt: config.HASHSALT,
     user_signin_server_path: '/signin/',
