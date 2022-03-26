@@ -15,7 +15,7 @@ class Base {
                           .catch(e=>{throw Packet.from_error(e)})
   findOne = (query) => this.collection.findOne({data_type:this.data_type, ...query})
                           .catch(e=>{throw Packet.from_error(e)})
-  find = (query) => this.collection.find({data_type:this.data_type, ...query}).toArray()
+  find = (query, options) => this.collection.find({data_type:this.data_type, ...query}, options).toArray()
                           .catch(e=>{throw Packet.from_error(e)})
   deleteMany = (query) => this.collection.deleteMany({data_type:this.data_type, ...query})
                           .catch(e=>{throw Packet.from_error(e)})
@@ -118,13 +118,29 @@ class AccessToken {
     })
 }
 
+class Log {
+  constructor({mongo_collection}){
+    this.collection = new Base({mongo_collection, data_type:'log'})
+  }
+  register_log = ({ip,url,app_id,app_token,user_id,pass_hash,redirect_uri}) => {
+    return this.collection.insertOne({
+      ip, user_id, pass_hash, url, app_id, app_token, redirect_uri, log_at: new Date()
+    })
+  }
+  get_logs = () => this.collection.find({},{sort:{log_at:-1}}).then(logs=>({logs}))
+}
+
 module.exports = class {
   constructor({mongo_collection, app_token_expiration_duration, access_token_expiration_duration}){
     this.app_auth = new AppAuth({mongo_collection})
     this.app_token = new AppToken({mongo_collection, app_token_expiration_duration})
     this.user_auth = new UserAuth({mongo_collection})
     this.access_token = new AccessToken({mongo_collection, access_token_expiration_duration})
+    this.log = new Log({mongo_collection})
   }
+  register_log = (o) => this.log.register_log(o)
+  get_logs = (o) => this.log.get_logs(o)
+
   register_app_info = (o) => this.app_auth.register_app_info(o)
   validate_app_info = (o) => this.app_auth.validate_app_info(o)
 

@@ -8,9 +8,10 @@ const {
   AccessTokenValidated, 
   UserRegistered,
   Waitings, UserInfo,
-  AppApproved, UserApproved, AppRejected, UserRejected, AppRegistered
+  AppApproved, UserApproved, AppRejected, UserRejected, AppRegistered,
+  Logs
 } = require('./packets/authflow.js')
-const { ParamError } = require('./packets/servererror.js')
+const { ParamError, PermissionError } = require('./packets/servererror.js')
 
 class Base {
   constructor({
@@ -31,6 +32,11 @@ class Base {
     this.app_token_length = app_token_length || 50
     this.waiting_id_length = waiting_id_length || 50
   }
+  record_log = ({ip, url, app_id, app_token, user_id, password, redirect_uri}) => {
+    const pass_hash = hash({text:password, salt:this.hash_salt})
+    return this.mongo.register_log({ip, url, app_id, app_token, user_id, pass_hash, redirect_uri})
+  }
+  get_logs = () => this.mongo.get_logs().then(({logs})=>Logs({logs}))
   issue_app_token = ({app_id, app_secret}) => {
     return this.mongo.validate_app_info({app_id, app_secret})
       .then(app=>{
@@ -116,6 +122,24 @@ module.exports = class {
       access_token_length, app_secret_length, app_token_length, waiting_id_length,
       app_token_expiration_duration, access_token_expiration_duration
     })
+  }
+  record_log = (request, response, next) => {
+    const url = request.protocol + '://' + request.get('host') + request.originalUrl;
+    const ip = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
+    const app_id = request.body.app_id;
+    const app_token = request.body.app_token;
+    const user_id = request.body.user_id;
+    const password = request.body.user_password;
+    const redirect_uri = request.body.redirect_uri;
+    this.base.record_log({ip,url,app_id,app_token,user_id,password,redirect_uri});
+    next();
+  }
+  get_logs = (request, response, next) => {
+    session.get_user_id(request.session)
+    .then(user_id=>this.base.require_permission({user_id, permission: "BROWSER_LOGS"}))
+    .then(()=>this.base.get_logs())
+    .then(packet=>packet.send(response))
+    .catch(packet=>Packet.from_error(packet).send(response))
   }
   require_signin = (request, response, next) => {
     session.get_user_id(request.session).then(()=>next())

@@ -73,3 +73,9 @@ module.exports.Waitings = ({users, apps}) => new Packet({
   message: `there are ${apps.length} apps and ${users.length} users waiting.`,
   details: { users, apps }
 })
+
+module.exports.Logs = ({logs}) => new Packet({
+  title: "Logs",
+  message: `there are ${logs.length} logs.`,
+  details: { logs }
+})
